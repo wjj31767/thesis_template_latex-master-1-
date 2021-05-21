@@ -52,7 +52,8 @@
 % units
 	\usepackage{siunitx}
 	\usepackage{dcolumn}
-
+%latex special character
+    \usepackage{latexsym}
 
 %% --------------------------------
 %% |      glossaries               |
@@ -187,11 +188,10 @@ Wort-tren-nung
 \pagenumbering{arabic}
 \include{Main/1_Introduction}      
 \include{Main/2_Fundamentals_Related_Work}     
-\include{Main/3_Conditions_Preliminaries} 		
-\include{Main/4_Concepts}
-\include{Main/5_Implementation}
-\include{Main/6_Evaluation}
-\include{Main/7_Conclusion_Future_Work}      
+\include{Main/3_Concepts}
+\include{Main/4_Implementation}
+\include{Main/5_Evaluation}
+\include{Main/6_Conclusion_Future_Work}      
 
 %% --------------------
 %% |   Appendix+Verzeichnisse   |
@@ -213,8 +213,7 @@ Wort-tren-nung
 \bibliographystyle{IEEEtranSA}   		% IEEE Alphanumeric
 \cleardoublepage
 \addcontentsline{toc}{chapter}{Bibliography}
-\bibliography{thesis_bibtex}
-
+\bibliography{references}
 % Online References
 \ifuseglossaries
 	\printglossary[type=onlineref, style=mylist]
