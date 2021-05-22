@@ -3,20 +3,32 @@
 \chapter{Fundamentals and Related Work}
 \label{sec:fundamentals_related-work}
 \section{Overview}
+
 The new era of deep neural networks began in 2012, when Krizhevsky et al. published
-their results on the ImageNet Large-scale Visual Recognition Challenge (ILSVRC) 
-\cite{krizhevsky_imagenet_2017}. Their deep neural network (DNN) has 5 convonlutional layers followed by 2 fully connected layers, which is approximately higher than the closest competitor based on SIFT\cite{sanchez_high-dimensional_2011}. The classification error rate is 10\%. For DNN, this moment is a huge breakthrough because they proved superior to classic computer vision methods. There are multiple
-The factors that contributed to this achievement, such as
-Train the network to perform multiple orders of magnitude more powerful hardware
-New training algorithms and networks have more training iterations than previously possible
-The architecture of convolutional layers, etc.
-Since then, many DNN methods for image classification and objects have been developed
-Detection. In the next section, we will review these methods. The existing method can be
-Divided into two groups: regional proposal method and end-to-end learning method.
-The former includes the region proposal step and the proposed DNN classifier
-Region, the latter is a DNN, used to obtain the original image and directly output information
-Regarding the detected object. 
-\subsection{}
+their results\cite{krizhevsky_imagenet_2017} on the ImageNet Large-scale Visual Recognition Challenge (ILSVRC)\cite{deng_imagenet_2009} . Their deep neural network (DNN) has 5 convolutional layers followed by 2 fully connected layers, which is approximately higher than the closest competitor based on SIFT\cite{sanchez_high-dimensional_2011}. The classification error rate is 10\%. For DNN, this moment is a huge breakthrough because they proved superior to classic computer vision methods. There are multiple factors that contribute to this achievement, such as
+The training network can perform multiple orders of magnitude more powerful hardware than before and more training iterations, new training algorithms and network convolutional layer architectures.
+
+Since then, many DNN methods for image classification and object detection have been developed. In the next section, we will review these methods. The existing methods can be divided into two groups: region proposal methods and end-to-end learning methods. The former includes regions proposal step and the proposed DNN classifier for proposed regions, the latter is a DNN, which is used to obtain the original image and directly output information about the detected object.
+\subsection{Region Proposal Method}
+
+Krizhevsky et al.\cite{krizhevsky_imagenet_2017} showed that DNN is a powerful tool for image classification. The conversion from the classification task to the detection network can be realized by classifying each possible sub-window of the image. However, this method requires huge computing power, because each image must run the classifier thousands times. The idea of region proposal solves this problem. It aims to suggest promising locations by using algorithms that are orders of magnitude faster than the classifier, thereby reducing the elevation window (number of runs of the classifier) for each image. Selective search\cite{uijlings_selective_2013} or edge boxes\cite{fleet_edge_2014} are examples of region proposal methods. 
+
+R-CNN by Girshick et al.\cite{girshick_rich_2014} uses selective search. It is a three-stage object detector with a selective search region proposal generator, which is further processed by DNN (the same as that used by Krizhevsky et al.\cite{krizhevsky_imagenet_2017}) into 4096 feature vectors, which is then processed and classified by SVM. This method works well, but the speed is very slow, because each image on the Tesla K20 GPU takes 18 seconds.
+
+He et al.\cite{he_spatial_2014} introduced the Spatial Pyramid Pool (SPPNet), in order to speeds up the calculation of R-CNN. It avoids re-evaluating the entire DNN on each proposal window by running the convolutional layer on the entire image and then pooling the feature maps, thereby creating a fixed-size grid (\(1\times1\), \(2\times2\), \(3\times3\), and \(6\times6\) ). Then, by concatenation the pooled vectors from the grid cells,a fixed-size feature vector (4096 elements) is created for each object. 
+
+SPPNet inspired the authors of R-CNN to create the Fast R-CNN\cite{ren_faster_2016} version of their algorithm. It speeds up the calculation in the same way as in SPPNet, but only uses one pyramid layer (\(7\times7\). Similarly, the SVM on the output is replaced by fully connected layers. These layers predict the probability of the class. Interestingly, they also directly bound the coordinates of the box.
+
+At the same time, Simonyan et al. are experimenting with very deep convolutional networks\cite{simonyan_very_2015}, in which they only use 3 to 3 convolutions and created a very successful VGGNet, which has up to 19 layers and is used in many subsequent papers, for example,\cite{ren_faster_2016,chen_3d_nodate}.
+
+Ren et al. is one of them. They introduced Faster R-CNN\cite{ren_faster_2016} using the VGG-16 network architecture. Most importantly, they replace selective search with a region proposal network (RPN), which shares a convolutional layer with a classification DNN. RPN is basically a sliding window on a feature map, and each window position outputs an objectivity score and 9 bounding boxes (for 9 anchor boxes-3 ratios, 3 aspect ratios). Then, these proposals are classified in Fast R-CNN. The algorithm can reach about 15fps, and the performance is very good. 
+
+He et al. even further improved the Faster R-CNN framework\cite{he_deep_2015} and their ResNet. It adds the remaining connections-shortcuts to the network, which makes the network only understand the difference between the input and output of the building blocks. This allows the use of SGD to train very deep networks because their design will not be affected much by gradient decay. Although the depth is very deep, the network is not as complicated as VGG-16\cite{simonyan_very_2015}. This is one of the newest and most advanced networks on ImageNet.
+\paragraph{3D Bounding Box Detection for Autonomous Driving Applications}
+
+\subsection{End-to-end Systems}
+
+Sermanet et al. used another method in OverFeat\cite{sermanet_overfeat_2014}. They used a Fully Convolutional Network (FCN) to predict the object of each grid unit of width/12\(\times\)height/12 grid, and then fused the prediction to get the output position, thus avoiding the use of object suggestion generators. This method has been shown to be faster than R-CNN, but worse \cite{girshick_rich_2014}. 
 \section{Datasets}
 \begin{enumerate}
 \item\textit{KITTI}
