@@ -47,13 +47,39 @@
 	\usepackage[ruled,vlined]{algorithm2e}
 
 % for forcing positions of tables, figures, ...
-	\usepackage{float}
+	\usepackage[capposition=bottom]{floatrow}
 
 % units
 	\usepackage{siunitx}
 	\usepackage{dcolumn}
 %latex special character
     \usepackage{latexsym}
+% math formular
+\usepackage{indentfirst} 
+\usepackage{mathtools}
+\usepackage{commath}
+\usepackage{amsmath}
+%footnote
+   % \usepackage[backend=biber,style=verbose-trad2]{biblatex}
+% 4th section
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{4}
+% \usepackage{titlesec}
+
+% \setcounter{secnumdepth}{4}
+
+% \titleformat{\paragraph}
+% {\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+% \titlespacing*{\paragraph}
+% {0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+
+
+
+
+% minus in formular
+\usepackage{graphicx}
+\newcommand{\minus}{\scalebox{0.75}[1.0]{$-$}}
+
 
 %% --------------------------------
 %% |      glossaries               |
@@ -83,7 +109,35 @@
   	
 	% ordinary acronyms
 	\newacronym{ma}{MA}{My Acronym}
-	\newacronym{}{}{}
+	\newacronym{dnn}{DNN}{Deep Learning Neural Network}
+	\newacronym{slam}{SLAM}{Simultaneous Localization and Mapping}
+	\newacronym{cnn}{CNN}{Convolutional Neural Network}
+	\newacronym{rcnn}{R-CNN}{Region Based Convolutional Neural Network}
+	\newacronym{yolo}{YOLO}{You Only Look Once}
+	\newacronym{lidar}{LiDAR}{Light Detection and Ranging}
+	\newacronym{fgsm}{FGSM}{Fast Gradient Sign Method}
+	\newacronym{pgd}{PGD}{Projected Gradient Descent}
+	\newacronym{svm}{SVM}{Support Vector Machine}
+	\newacronym{cw}{C\&W}{The Carlini and Wagner Method}
+	\newacronym{jsma}{JSMA}{Jacobian-based Saliency Map Attack}
+	\newacronym{roi}{RoI}{Region of Interest}
+	\newacronym{rpn}{RPN}{Region Proposal Network}
+	\newacronym{fpn}{FPN}{Feature Pyramid Network}
+	\newacronym{ssd}{SSD}{Single Shot MultiBox Detector}
+	\newacronym{ap}{AP}{Average Precision}
+	\newacronym{coco}{COCO}{Microsoft Common Objects in Context}
+	\newacronym{mlp}{MLP}{Multi-Layer Perceptron}
+	\newacronym{bev}{BEV}{Bird’s Eye View}
+	\newacronym{dl}{DL}{Deep Learning}
+	\newacronym{vfe}{VFE}{Voxel Feature Encoding}
+	\newacronym{iou}{IoU}{Intersection Over union}
+	\newacronym{voc}{VOC}{Visual Object Classes}
+	\newacronym{second}{SECOND}{Sparsely Embedded Convolutional Detection}
+	\newacronym{ifgsm}{IFGSM}{Iterative Fast Gradient Sign Method}
+	\newacronym{mifgsm}{MIFGSM}{Momentum Iterative Fast Gradient Sign Method}
+	\newacronym{aos}{AOS}{Average Orientation Similarity}
+	\newacronym{fps}{FPS}{Furthest Point Sampling}
+
 	% usage: \gls{} \glspl{} or \acrshort{}
 	
 	% online references
@@ -190,8 +244,7 @@ Wort-tren-nung
 \include{Main/2_Fundamentals_Related_Work}     
 \include{Main/3_Concepts}
 \include{Main/4_Implementation}
-\include{Main/5_Evaluation}
-\include{Main/6_Conclusion_Future_Work}      
+\include{Main/5_Conclusion_Future_Work}      
 
 %% --------------------
 %% |   Appendix+Verzeichnisse   |
@@ -210,10 +263,12 @@ Wort-tren-nung
 \listoftables
 
 % Bibliography
-\bibliographystyle{IEEEtranSA}   		% IEEE Alphanumeric
+% \bibliographystyle{IEEEtranSA}   		% IEEE Alphanumeric
+\bibliographystyle{ieeetr}
 \cleardoublepage
 \addcontentsline{toc}{chapter}{Bibliography}
-\bibliography{references}
+\bibliography{references,thesis_bibtex}
+
 % Online References
 \ifuseglossaries
 	\printglossary[type=onlineref, style=mylist]

@@ -1,141 +1,123 @@
 % !TeX root = ../thesis.tex
 
-\chapter{Fundamentals and Related Work}
+\chapter{Related Works}
 \label{sec:fundamentals_related-work}
-\section{Overview}
+In this section, we review the literature in neural network and introduce some methods of adversarial attacks.
+\section{Image Object Detection Network}
 
-The new era of deep neural networks began in 2012, when Krizhevsky et al. published
-their results\cite{krizhevsky_imagenet_2017} on the ImageNet Large-scale Visual Recognition Challenge (ILSVRC)\cite{deng_imagenet_2009} . Their deep neural network (DNN) has 5 convolutional layers followed by 2 fully connected layers, which is approximately higher than the closest competitor based on SIFT\cite{sanchez_high-dimensional_2011}. The classification error rate is 10\%. For DNN, this moment is a huge breakthrough because they proved superior to classic computer vision methods. There are multiple factors that contribute to this achievement, such as
-The training network can perform multiple orders of magnitude more powerful hardware than before and more training iterations, new training algorithms and network convolutional layer architectures.
+Deep Neural Networks(\acrshort{dnn}) has shown highly expressive performance in the last decade and has become an indispensable tool in many practical tasks such as image classification, natural language processing and object detection. In 2012, Krizhevsky et al.\cite{krizhevsky_imagenet_2017} use a 5-layers convolutional neural network named as AlexNet achieving a considerably outstanding performance than their closest competitor \acrshort{svm}, ushering a new era in deep neural networks and encouraging further exploration in image classification. 
 
-Since then, many DNN methods for image classification and object detection have been developed. In the next section, we will review these methods. The existing methods can be divided into two groups: region proposal methods and end-to-end learning methods. The former includes regions proposal step and the proposed DNN classifier for proposed regions, the latter is a DNN, which is used to obtain the original image and directly output information about the detected object.
+With the improvement of machine learning models and object representations, complete image understanding including precisely determine the class and location of the objects, known as object detection, becomes achievable and crucial. A detection work is to classify every sub-window in the image, which requires huge computational work. Two methods, region-proposal methods and end-to-end systems, are proposed to address the issues.
 \subsection{Region Proposal Method}
+Region-proposal method is a two-step process, taking a basic scan to suggest the promising locations and then evaluating the interest region with \acrshort{dnn} classifier. This method mainly include \acrshort{rcnn}\cite{girshick_rich_2014}, SPPNet\cite{he_spatial_2014}, Fast R-CNN\cite{girshick_fast_2015}, Faster-RCNN\cite{ren_faster_2016}, R-FCN\cite{dai_r-fcn_2016},\acrshort{fpn}\cite{lin_feature_2017}, and Mask R-CNN\cite{he_mask_2018}. 
 
-Krizhevsky et al.\cite{krizhevsky_imagenet_2017} showed that DNN is a powerful tool for image classification. The conversion from the classification task to the detection network can be realized by classifying each possible sub-window of the image. However, this method requires huge computing power, because each image must run the classifier thousands times. The idea of region proposal solves this problem. It aims to suggest promising locations by using algorithms that are orders of magnitude faster than the classifier, thereby reducing the elevation window (number of runs of the classifier) for each image. Selective search\cite{uijlings_selective_2013} or edge boxes\cite{fleet_edge_2014} are examples of region proposal methods. 
+R-CNN was proposed in 2014 by Girshick et al.\cite{girshick_rich_2014}. This network can be divided into three stages, extracting region proposals, capture features of each proposal, and classify regions with \acrshort{svm}. In the first stage, \acrshort{rcnn} takes selective search\cite{uijlings_selective_2013} to generate thousands region proposals for each image using bottom-up grouping and saliency score. Then, these chosen proposals are wrapped or cropped into a settled resolution and a 4096 dimensional feature vector is extracted by CNN as Krizhevsky proposed(ImageNet\cite{deng_imagenet_2009}). In the last step, each region proposal is scored with a trained class-specific linear \acrshort{svm}s. \acrshort{rcnn} has good performance and brings CNN into practical object detection, but both the searching and training procedures are time-consuming and storing features requires a large storage space.
 
-R-CNN by Girshick et al.\cite{girshick_rich_2014} uses selective search. It is a three-stage object detector with a selective search region proposal generator, which is further processed by DNN (the same as that used by Krizhevsky et al.\cite{krizhevsky_imagenet_2017}) into 4096 feature vectors, which is then processed and classified by SVM. This method works well, but the speed is very slow, because each image on the Tesla K20 GPU takes 18 seconds.
+Not only the speed needs to be improved, objects may also have incomplete or distort problems in the wrapping procedure. To solve these issues, He et al.\cite{he_spatial_2014} introduce spatial pyramid pooling(SPP) net, by reusing the feature maps based on the spatial positions to avoid repeated computation.
 
-He et al.\cite{he_spatial_2014} introduced the Spatial Pyramid Pool (SPPNet), in order to speeds up the calculation of R-CNN. It avoids re-evaluating the entire DNN on each proposal window by running the convolutional layer on the entire image and then pooling the feature maps, thereby creating a fixed-size grid (\(1\times1\), \(2\times2\), \(3\times3\), and \(6\times6\) ). Then, by concatenation the pooled vectors from the grid cells,a fixed-size feature vector (4096 elements) is created for each object. 
+Inspired by the SPP-net, the developer of R-CNN Girshick improve his network by introducing a region of interest(\acrshort{roi}) pooling layer, which is a special case of SPP layer with only one pyramid layer\cite{girshick_fast_2015}. The training of all networks is optimized in one stage with multi-task loss on classification and bounding box regression. Fast R-CNN requires less storage space and improve the efficiency and accuracy further.
 
-SPPNet inspired the authors of R-CNN to create the Fast R-CNN\cite{ren_faster_2016} version of their algorithm. It speeds up the calculation in the same way as in SPPNet, but only uses one pyramid layer (\(7\times7\). Similarly, the SVM on the output is replaced by fully connected layers. These layers predict the probability of the class. Interestingly, they also directly bound the coordinates of the box.
+Ren et al\cite{ren_faster_2016} introduce Regional Proposal Network(\acrshort{rpn}) to replace the selective search methods. \acrshort{rpn} shares full-image convolutional layers with detection network and can predict object bounds and outputs score at each position. The proposal faster R-CNN signifies that the region proposal-based \acrshort{cnn} can be trained in end-to-end method, but the training algorithm is quite time-consuming.
 
-At the same time, Simonyan et al. are experimenting with very deep convolutional networks\cite{simonyan_very_2015}, in which they only use 3 to 3 convolutions and created a very successful VGGNet, which has up to 19 layers and is used in many subsequent papers, for example,\cite{ren_faster_2016,chen_3d_nodate}.
+Li et al.\cite{dai_r-fcn_2016} proposed region-based fully convolutional networks(R-FCN) to break down the translation invariance by inserting the \acrshort{roi} pooling layer into the convolutions manually. Compared with Faster R-CNN, the last layer of this methods outputs \(k^{2}\) position-sensitive score maps, being averaged to produce a (C+1) dimension vector, and obtain class-agnostic bounding box by adding another \(4k^{2}\) dimension convolutional layer. 
 
-Ren et al. is one of them. They introduced Faster R-CNN\cite{ren_faster_2016} using the VGG-16 network architecture. Most importantly, they replace selective search with a region proposal network (RPN), which shares a convolutional layer with a classification DNN. RPN is basically a sliding window on a feature map, and each window position outputs an objectivity score and 9 bounding boxes (for 9 anchor boxes-3 ratios, 3 aspect ratios). Then, these proposals are classified in Fast R-CNN. The algorithm can reach about 15fps, and the performance is very good. 
+The architecture of FPN\cite{lin_feature_2017} is built with a bottom-up pathway, which downsamples the feature map and chooses the last layer output as the reference set of feature maps, a top-down pathway, where feature maps are upsampled and enhanced with same spatial size maps from bottom-up pathway, and several lateral connections. This method does not rely on CNN architectures, and can be used in object detection and other studies in computer vision, such as instance segmentation.
 
-He et al. even further improved the Faster R-CNN framework\cite{he_deep_2015} and their ResNet. It adds the remaining connections-shortcuts to the network, which makes the network only understand the difference between the input and output of the building blocks. This allows the use of SGD to train very deep networks because their design will not be affected much by gradient decay. Although the depth is very deep, the network is not as complicated as VGG-16\cite{simonyan_very_2015}. This is one of the newest and most advanced networks on ImageNet.
-\paragraph{3D Bounding Box Detection for Autonomous Driving Applications}
+Instance segmentation includes two steps: detecting all the objects in the image and segmenting the instance, also known as semantic segmentation. Problems such as spurious edge or potential systematic errors on overlapping instances might occur\cite{arnab_pixelwise_2017}, and Mask R-CNN\cite{he_mask_2018} add a segmentation mask branch to solve the issues. Mask R-CNN adopts RoIAlign layer, which uses bilinear interpolation to compute the values of input features, replacing the spatial quantization for features extraction in 
+\acrshort{roi} pooling. Although this improvement increases the computational volume, the substantial enhancement in accuracy and its flexibility to cooperate with other tasks make this instance-level recognition method accepted in objection detection.
 
 \subsection{End-to-end Systems}
+Different from the region proposal framework, which has multistage and each stage is trained separately, end-to-end system has only one stage using regression or classification to map image pixels straightly to bounding box. Two typical frameworks of this methods are \acrshort{yolo}\cite{redmon_you_2016} and \acrshort{ssd}\cite{liu_ssd_2016}.
 
-Sermanet et al. used another method in OverFeat\cite{sermanet_overfeat_2014}. They used a Fully Convolutional Network (FCN) to predict the object of each grid unit of width/12\(\times\)height/12 grid, and then fused the prediction to get the output position, thus avoiding the use of object suggestion generators. This method has been shown to be faster than R-CNN, but worse \cite{girshick_rich_2014}. 
-\section{Datasets}
-\begin{enumerate}
-\item\textit{KITTI}
+Many researchers have tried to apply regression or classification to model object detection before \acrshort{yolo} and \acrshort{ssd}, but huge computing difficulty and inability to deal with overlapping objects obstruct the development. 
 
+\acrshort{yolo}(You only look once) is a novel framework proposed by Redmon et al.\cite{redmon_you_2016}, which predict confidences and bounding boxes with the whole topmost feature map. \acrshort{yolo} consists of 24 convolutional layers and 2 fully connected layers, and it can learn priors on object positions. Additionally, decrease in false positives on backgrounds makes it possible for \acrshort{yolo} to cooperate with Fast R-CNN. Later YOLOv2, an upgrade version, adopted high resolution classifier, dimension clusters, anchor boxes etc., exhibiting expressive improvement in m\acrshort{ap} and real-time performance.\cite{redmon_yolo9000_2016}
 
-The whole work is mainly based on PointPillars\cite{lang_pointpillars_2019}. It has fast inference speed and relative higher detection accuracy.
+Another end-to-end approach \acrshort{ssd}(Single Shot MultiBox Detector) was suggested by Liu et al. \cite{liu_ssd_2016}, which realizes a better balance between precision and speed. \acrshort{ssd} runs a convolutional network on the input image only once to extract a feature map, uses default anchor boxes at a variety of aspect ratios and scales, and predict bounding boxes from multiple feature maps with varied resolutions to deal with the object scale. \acrshort{ssd} realizes an outperformance than Faster R-CNN in accuracy and almost three times faster on PASCAL VOC\cite{everingham_pascal_2010} and \acrshort{coco}\cite{lin_microsoft_2015}, and more efficient than \acrshort{yolo} in dealing with large-size objects.
 
-For adversarial attack the work is based on KITTI\cite{geiger_vision_2013} dataset. This dataset is proposed relative earlier and famous in autonomous driving field. But it didn't consider adverse weather problem.
+\section{PointCloud Classification}
+3D data complement 2D images, providing shape and scale information to get a more thorough understanding of the surroundings. The representations of 3D data include point clouds, depth-maps, volumetric grids, meshes etc., and \acrshort{lidar} point clouds are used in this paper. 
 
-For adverse weather simulation, the work is based on DENSE\cite{heinzler_cnn-based_2020} dataset. This work have shown how to use this dataset to segment points with weather class. This dataset have collected the point cloud in chamber with man-made adverse weather, there's also clean point cloud. 
+Point clouds can be classified as Multiview-based, point-based and voxel-based methods. Multiview based methods firstly project point clouds into multiple views, extract and fuse features for classification. 
 
-\end{enumerate}
-CNN
-Convolution
-PointNet
-Adversarial attacks
-\begin{figure}[!htbp]
-    \centering
-    \subfigure[Logo 1]{
-        \includegraphics[width = \textwidth / 2 ]{Logos/KITLogo_RGB.pdf}
-        \label{fig:logo1}
-    }
-    \hspace{10pt}
-     %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
-     %(or a blank line to force the subfigure onto a new line)
-    \subfigure[Logo 2]{
-        \includegraphics[width = \textwidth / 2 ]{Logos/KITLogo_RGB.pdf}
-        \label{fig:logo2}
-    }
-    \caption[Short Description for List of Figures]{Long Description for under the figure.}
-    \label{fig:logo1and2}
-\end{figure}
+Su et al.\cite{su_multi-view_2015} introduce MVCNN, which is a pioneer work, proving that combining multiple views of a 3D shape information into a compact descriptor could attain a good recognition performance. The procedure of aggregating multi-view features to global shape descriptor is the main challenge of this approach, which inspires researchers to exploit progressive feature aggregation strategy. 
 
-\section{Evaluation of Adversarial Attacks}
-\begin{enumerate}
-\item\textit{Intersection over union}
+One attempt of Wei and his colleagues \cite{wei_view-gcn_2020} is to regard multiple views as graph nodes and construct a hierarchical graph \acrshort{cnn} to learn global shape descriptor. They name the network as view-GCN, which achieves high accuracy in point cloud classification and retrieval and outperform other methods on RGB-D dataset\cite{lai_large-scale_nodate}.
 
-Intersection over union means the similarity of two bounding boxes. It is used to compare detected bounding boxes and ground truth bounding boxes. 2D version is shown here:
-\begin{center}
-          \(IOU_{b_{1},b_{2}} = \frac{A(b_{1}\cap b_{2})}{A(b_{1}\cup b_{2})} \)
-\end{center}
-where \(A(\bullet)\) represents Area and b, are bounding boxes. For KITTI\cite{geiger_vision_2013} evaluation there's two criterions, \(IOU\geq0.5\) and \(IOU\geq0.7\) to accept a detection as a correct one.
+Voxel-based method, also known as volumetric-based method, is to voxelize a point cloud into 3D grids and classify the point cloud by introducing volumetric representation on CNN training. With the proposal of VoxNet\cite{maturana_voxnet_2015} by Maturana, the idea of transforming a 3D model into an occupancy grid is widely accepted and encourages promotion of the VoxNet and its variants. 
 
-\item\textit(Average Precision)
-Precision is the ratio of detected objects \(TP+FP\), which are detected correctly. It shows how many false positive \(FP\) detections the detectors produces. It is defined as follows
-\begin{center}
-          \(Precision = \frac{TP}{TP+FP} \)
-\end{center}
-Recall represents the ratio of the ground truth objects \(TP+FN\), which are detected by the detector. It is defined as 
-\begin{center}
-          \(Recall = \frac{TP}{TP+FN} \)
-\end{center}
-Average precision (AP) is used in the KITTI benchmark. It samples the precision/recall curve on 11 places, interpolates it and computes the arithmetic mean. Therefore, this measure gives insight into how the precision/recall curve changes. For details see\cite{everingham_pascal_2010}
+Wu et al\cite{wu_3d_2015} propose to use a binary probability distribution on a voxel grid to demonstrate a geometric 3D shape, applying on convolutional deep belief network. The recognition accuracy is impressive on various recognition tasks and on different datasets, but the ability to scale dense 3D data is limited due to the large computational and storage requirements. 
 
-\end{enumerate}
+To better represent the point clouds geometry information, PointGrid was introduced by Le et al.\cite{le_pointgrid_2018}, which is \acrshort{cnn} integrated point and grid. The network is embedded a regular-structured volumetric grid to hierarchically extract global information and incorporates constant points number within each grid cell to overcome the limitation of grid cell. Compared with existing state-of-art methods, this approach has advantages in speed and memory requirements.
+  
+Methods based on multiple view images and voxel grids all adopt the views from image neural network, different from them, point-based approach works on raw point clouds directly, simplifying the process and reducing the information loss during projection or voxelization. In terms of network architecture, point-based method can be categorized into convolution-based, graph-based, pointwise \acrshort{mlp} and other methods. 
 
-\section{FGSM and Its Variants}
+Considering the irregularity of point data, point-wise \acrshort{mlp} methods use Multi-Layer Perceptron to process each point independently, then use a symmetric aggregation function to derive a global feature. An innovative and simple network PointNet\cite{qi_pointnet_2017} directly takes point clouds as input and treat these input points independently and identically. Max pooling layer uses a single symmetric function, respecting the permutation invariance, to select informative points in the point cloud, which is the key part of PointNet. In the final step, the network aggregate learnt information to the global descriptor for further point cloud classification and segmentation. PointNet exhibits strong stability and efficiency empirically and the ideas are transferred and advanced in further research.
 
-\begin{enumerate}
-\item \textit{FGSM}
+Incapability to capture local structures of PointNet motivates Qi et al.\cite{qiPointNetDeepHierarchical2017} to put forward an improved version, PointNet++. This hierarchical network partitions point sets into local regions according to the metric space distance firstly, then further group local features to capture high-level representations until collect the features of the whole point set. Unlike the single max pooling layer, PointNet++ involves a number of set abstraction levels, which is made of sampling layer, grouping layer and PointNet layer. By abstracting increasingly broader local regions along the hierarchy, PointNet++ is able to capture local features with increasingly larger scales, and the efficiency and robustness are both proved significantly better than other benchmarks in point clouds study.
 
-FGSM is shorten for fast gradient sign method\cite{goodfellow_explaining_2015}. It uses sign function with gradients, which get from loss function. As the panda example (Figure 4.1) shows the process of FGSM. The left picture is clean image, the classifier predicts the picture a panda. When perturbation is added to the clean image, even the epsilon value is very small, classification result is totally different, the panda is recognized as a gibbon.
-\begin{center}
-          \(x_{adv} = x + \epsilon sign(\nabla_{x}J(f(x;\theta),y) \)
-\end{center}
+\section{\acrshort{lidar}-based Object Detection Network}
+The availability and reliability of 3D sensors such as \acrshort{lidar}, RGB-D camera and various 3D scanners, make it possible for autonomous vehicles equipped with multiple sensors collect more accurate and detailed information. The input of 3D object detector is the point clouds of a scene and a 3D bounding box is sketched around the detected target. The approaches of 3D object detection are divided into two types: region proposal methods and single shot methods. 
+\subsection{Region Proposal-based Methods}
+Adopting the idea in 2D image object detection, region proposal-based methods in 3D object detection consists of three categories regarding to the means of generating object proposal, specifically Multiview-based, segmentation-based and frustum-based, and the representative networks of which are shown in Figure \(\ref{fig:LiDAR Region Proposal}\)
+\subsubsection{Multi-view based Methods}
+The general idea of Multiview methods is integrating proposal-wise features from various point cloud projections, such as \acrshort{lidar} front view and \acrshort{bev} (Bird’s Eye View), to generate 3D rotated boxes. The specific process is shown in Figure\(\ref{fig:LiDAR Region Proposal}\) (a). MV3D, a sensory-fusion framework, is proposed by Chen et al.\cite{chen_multi-view_2017} Taking \acrshort{lidar} point cloud and RGB images as the input to generate oriented 3D bounding boxes. The network consists of two subnetworks, to generate 3D object proposals and to fuse multi-view features respectively. 3D candidate boxes are generated in the first subnetwork from the \acrshort{bev} map projected by 3D point clouds, and region-wise features from multiple views are combined in the deep fusion scheme in the second subnetwork. MV3D achieves higher AP in 3D localization and detection than current state-of-the-art methods.
+
+To improve fusion efficiency in Multiview-based methods, Ku et al \cite{ku_joint_2018} proposed AVOD (aggregate view object detection) network including a region proposal network and a second stage detector network. A novel architecture, is introduced in the \acrshort{rpn} step, which can perform multi-modal feature fusion to produce region proposals for small objects with a high recall. 
+
+\subsubsection{Segmentation-based Methods}
+Achieving higher recall rates and outperformance in complexed scenes than Multiview-based methods, segmentation-based methods remove most background points with the semantic segmentation techniques and then generate plentiful high-quality points on foreground points. Shi et al. \cite{shi_pointrcnn_2019} come up with the PointRCNN, which generates proposals by segmenting point clouds directly into foreground objects and refines proposals by combining local spatial features and semantic features. The process is shown in Figure \(\ref{fig:LiDAR Region Proposal}\) (b),
+
+A sequential fusion method, PointPainting was proposed by Sourabh et al.\cite{vora_pointpainting_2020}, which is a flexible framework that has three stages: semantic segmentation, fusion, and object detection. In the semantic segmentation network, pixel-wise segmentation scores are computed and served as compact image features, and then points are painted with the scores and fed into detectors. On the KITTI benchmark, PointPainting offering a fast, accurate and robust results in extensive experimentation.
+
+\subsubsection{Frustum-based Methods}
+Qi et al., the constructor of PointNet, contributed a pioneering work using frustum-based method, called F-PointNets\cite{qi_frustum_2018}. The procedure is shown in Figure \(\ref{fig:LiDAR Region Proposal}\) (c), which extracts 3D frustum proposals from 2D candidate regions generated by image object detectors firstly, then carry out instance segmentation to predict the 3D mask of the target object, and lastly perform regression using PointNet variants to estimate a modal 3D bounding box. By leveraging both 2D detectors and 3D \acrshort{dl} techniques for object localization, this model is able to provide accurate 3D bounding boxes under situations of occlusion or partial data. 
+
 \begin{figure}[!htbp]
 \centering
-\includegraphics[scale=0.5]{FGSM.png}
-\caption{Adversarial attack process of FGSM example}
-\label{fig:FGSM}
+\includegraphics[scale=0.7]{Graphics/LiDAR Region Proposal.png}
+\caption{Typical networks for three categories of region proposal-based 3D object detection methods.\cite{guo_deep_2020} From top to bottom: (a) multi-view based, (b) segmentation-based and (c) frustum-based methods.}
+\label{fig:LiDAR Region Proposal}
 \end{figure}
-\item \textit{IFGSM} 
 
-IFGSM\cite{kurakin_adversarial_2017} is shorten for iterative fast gradient sign method. This method improves FGSM and is also proposed by Goodfellow and his partners. IFGSM applies FGSM multiple times with a small step size. IFGSM performs better than FGSM. When the same clean image is attacked by FGSM and IFGSM with the same total epsilon, the impact of FGSM attack can be easily observed by naked eyes, but attack in IFGSM is imperceptible.
-\begin{center}
-          \(X_{0}^{adv} = X,  X_{N+1}^{adv}=Clip_{X,\epsilon}{X_{N}^{adv}+\alpha sign(\nabla_{x}J(f(X_{N}^{adv};\theta),y_{true}))} \)
-\end{center}
- \item \textit{MIFGSM}
- 
- MIFGSM\cite{dong_boosting_2018} is shorten for iterative fast gradient sign method with momentum. This method stabilizes optimization by accumulating gradients at each iteration.
-  \begin{center}
-          \(x^{*}_{t+1} =x^{*}_{t}+\alpha \frac{g_{t+1}}{\|g_{t+1}\|_{2}},
-           g_{t+1} = \mu * g_{t}+\frac{J(X^{*}_{t},y^{*})}{\|\nabla_{x}J(X_{t}^{*},y^{*}\|_{1}} \)
-\end{center}
- \item \textit{PGD}
- 
- PGD\cite{madry_towards_2019} is shorten for projected gradient descent. Compared with IFGSM, this approach adds random initialization perturbation at the beginning.
- \begin{center}
-          \(x^{t+1} =\prod_{x+S}({x^{T}+\alpha sign(\nabla_{x}L(\theta;x;y)))} \)
-\end{center}
- 
- \item \textit{Fast Gradient Norms}
- 
- S in FGSM is sign, which represents  \(L_\infty\) norm. DeepFool\cite{moosavi-dezfooli_deepfool_2016} proposed  \(L_2\) norm to replace sign norm for a better result in image. 
- \begin{center}
-          \(x^{*} =x+\sigma\frac{\nabla_{x}J(x,y)}{\|\nabla_{x}J(x,y)\|_{2}} \)
-\end{center}
- There's also  \(L_1\) norm as Manhattan metric to replace sign norm. Liu et.al(\cite{liu_adversarial_2019}) proposed a new version of \(L_2\) norm named \(L_2.5\) norm, which is normalized \(L_2\) norm's result. 
- \item \textit{Attack on Different Features} 
- 
- LiDAR point clouds have 4 dimensions which are 4 features: \(x\) coordinate, \(y\) coordinate, \(z\) coordinate and intensity \(r\). So there are two different kinds of attack types: one is only attack one feature, which is separately attack \(x\) coordinate, \(y\) coordinate, \(z\) coordinate and intensity \(r\). The other is attack multiple features: \(xyz\) coordinates, and the combination of \(xyz\) coordinates and intensity \(r\). 
+\subsubsection{Other Methods}
+By deeply intergrating 3D voxel \acrshort{cnn} and PointNet-based set abstraction, a recent unified 3D object detection framework PointVoxel-RCNN was introduced by Shi et al.\cite{shi_pv-rcnn_2021}. It is a two-stage strategy, specifically voxel-to-keypoint and keypoint-to-grid. In the first step, voxel-based CNN is adopted to learn voxel-wise multiscale features and generate accurate 3D proposals, and then voxel-wise features are groupped to aggregate key point features via PointNet-based set abstraction. In the second stage,  a ROI-grid pooling module incorporated with key point features is established to learn proposal features for subsequent proposals refinement and confidence prediction. The empirical results demonstrate outstanding performance with high ranking on KITTI dataset and Waymo Open dataset\cite{sun_scalability_2020}.
+Shi et al.\cite{shi_pv-rcnn_2021} proposed PointVoxel-RCNN (PV-RCNN) to leverage both 3D convolutional network and PointNet-based set abstraction for the learning of point cloud features. Specifically, the input point clouds are first voxelized and then fed into a 3D sparse convolutional network to generate high-quality proposals. The learned voxel-wise features are then encoded into a small set of key points via a voxel set abstraction module. In addition, they also proposed a keypoint-to-grid \acrshort{roi} abstraction module to capture rich context information for box refinement. Experimental results show that this method outperforms previous methods by remarkable margin. 
 
-\item\textit{Adversarial training}
+To improve the preliminary work PointRCNN from the inspiration of 3D ground-truth boxes, Shi et al proposed a Part-\(A^{2}\) net\cite{shi_points_2020}, which is composed of two stages: part-aware stage and part-aggregation stage. The part-aware stage utilizes accurate intra-object parts locations provided by ground truth boxes and groups the intra-object information via \acrshort{roi}-aware point cloud pooling module. Then in the part-aggregation stage, spatial relationship of the pooled intra-object info are used to refine the box location. This method introduces intra-object part locations learning for the first time and effectively enhance the 3D object detection performance.
 
-FGSM-based Adversarial training is an efficient way to defense adversarial attacks of FGSM. The adversarial training of FGSM:
-\begin{center}
-          \(Loss_{train} = 1/2*(Loss_{original}+Loss_{perturbation}) \)
-\end{center}
+\subsection{Single Shot Methods}
+Extending the end-to-end approach in image to 3D object detection, single shot method is a single-stage network that can predict class probability and regress 3D bounding boxes directly. Zhou and Tuzel\cite{zhou_voxelnet_2017} introduce VoxelNet, which merges the feature extraction and bounding box generation into one stage. VoxelNet partitions point cloud into equally spaced voxels firstly, and transforms points in each voxel into features via \acrshort{vfe} layer, resulting in a volumetric representation of points clouds, which can cooperate with \acrshort{rpn} for further detection work. The performance of VoxelNet is strong, but the large computational cost and low speed constrain its feasibility in real-time applications. 
+\subsubsection{Discretization-based Methods}
+Adopting the voxel-based feature extraction method, Yan et al.\cite{graham_3d_2017} put forward a novel approach aiming to increase the speed and orientation estimation performance\cite{yan_second_2018}. Following the voxel feature extractor, a spatially sparse convolution is used to extract feature from z-axis before generating \acrshort{bev} images, and GPU-based generation algorithm are used for sparse convolution to enhance the speed further. Considering the large loss caused by the difference in orientation between ground truth and prediction when their bounding boxes are overlapping, an innovative angle loss regression is proposed to improve performance. A data augmentation approach based on capacity is introduced which exhibits substantial enhancement in convergence speed and performance.
 
-\end{enumerate}
+A new encoder PointPillars, proposed by Lang et al.\cite{lang_pointpillars_2019}, transforms point clouds to pillars and utilizes PointNets to extract features on pillars. The network incorporates three stages: a encoder learn features and scatter back the learned features to a pseudo image, a backbone of 2D convolution convert the pseudo-image into a concatenation of all feature maps, and use \acrshort{ssd} methods to predict 3D bounding boxes in the last step. From the experimental results on the KITTI\cite{geiger_vision_2013} dataset, PointPillars shows dominant outperformance in AP at a higher speed, comparing with other existing methods.
+
+\section{Adversarial Attacks and Defenses}
+Evolved from back-propagation algorithm, gradient-based attacks make a slight modification to develop a perturbation vector for the input. Keeping the model weights constant and considering the input as a variable, gradients of each input element can be obtained and can be utilized to generate perturbation vector. Some widely used adversarial attack techniques include FGSM\cite{goodfellow_explaining_2015}, BIM(Iterative-FGSM\cite{kurakin_adversarial_2017}), FGSM with momentum\cite{dong_boosting_2018}, PGD\cite{madry_towards_2019} etc.
+
+FGSM(Fast gradient sign method) ,proposed by Goodfellow et al.\cite{goodfellow_explaining_2015} is the main approach used in this paper. The general idea is to generate adversarial examples with the use of the gradient of the loss function with respect to an upper bound of the perturbation. The gradient of the loss function can be computed in deep neural networks in a fast speed, so it is named FGSM. This method is widely accepted in 2D image object detection tasks\cite{liu_detection_2018,kurakin_adversarial_2017}, also provides insight in 3D point clouds attack\cite{zeng_adversarial_2019}. More specific explanation of loss function and description of FGSM variants will be displayed in the next section.
+
+Jacobian-based Saliency Map Attack (JSMA) is a practical gradient-based attack method relies on Jacobian matrix, is firstly proposed in image classification work by Papernot et al.\cite{papernot_limitations_2015}. It’s a forward derivative matrix used to build adversarial saliency maps, incorporating a specific perturbation in the input features to generate adversarial samples. This method achieves 97\% adversarial success rate with modification on average 4.02\% input features in each sample. JSMA is applicable to control adversaries with respect to the perturbation choice based on the adversarial goals. Some variants of JSMA grant this method more flexibility, M-JSMA lower the requirements of specifying the target class and the direction of perturbation, but still provides competitive speed and performance\cite{wiyatno_maximal_2018}, Weighted-JSMA utilizes the output probabilities to apply a weighting on the saliency map, showing the faster and more efficient non-targeted attacks than JSMA. Based on WJSMA, Taylor-JSMA take additional step to penalize external input features, giving better performance in target attack than WJSMA\cite{wiyatno_maximal_2018}.
+
+Besides attacks in images, JSMA method can also be extended to attacking point clouds classifiers. Liu et al.\cite{liu_extending_2019} modified the JSMA slightly by considering gradients of three dimensions of the point and add perturbations in all three dimensions. Depending on the gradients, the value of dimensions can be changed, leading to the increase of candidate points to be perturbed. However, the attack effectiveness of JSMA is not satisfying with a lower success rate empirically compared with other FGSM and FGSM variants.
+
+Defense is the operation to train neural network to make the attacks fail as much as possible. Papernot et al.\cite{papernot_distillation_2016} suggest a defensive mechanism named defensive distillation, to train DNN classifier to be more robust to perturbation. First step is to train a network on the training data with a softmax temperature, then use a probability vector which has additional class probabilities knowledge to train a distilled network at the same temperature and same training data. The empirical results on the MNIST dataset indicates resilience increase of DNNS to adversaries and improve class generalizability.
+
+Defense on JSMA and its variants are investigated in(Probabilistic Jacobian-based Saliency Maps Attacks). By adding adversarial samples produced by JSMA, WJSMA, TJSMA to the training set, networks against TJSMA and WJSMA provide the better performance than JSMA from the view of defender.
+
+Applied the optimization method to craft adversarial samples, Carlini and Wagner\cite{carlini_towards_2017} construct three powerful attacks \(L_{0},L_{1},L_{\infty}\), which can defeat the defensive distillation(distillation as a defense to adversarial perturbations against deep neural networks), providing a better baseline for evaluating the efficacy defenses model. They generate adversarial examples by iteratively minimize the distance metric between real and adversarial image under different constraints. CW attacks perform well in terms of success rate on IMAGENET dataset\cite{carlini_towards_2017,rottmann_detection_2021}, but it shows high computational cost and less convenient in the real-time applications\cite{combey_probabilistic_2020}. C\&W attack approach illuminates further adversarial attack approach such as EAD\cite{chen_ead_2018},\cite{sharif_accessorize_2016},()
+
+DeepFool is another optimization-based method, proposed by Moosavi-Dezfooli et al.\cite{moosavi-dezfooli_deepfool_2016}. This method suggests an iterative linearization algorithm DeepFool, which can effectively compute adversarial perturbations and accurately evaluate the robustness of classifiers in a high speed, expecting to be a baseline method on large-scale datasets.
+
+Xiao et al.\cite{xiao_generating_2019} were the first to utilize generative adversarial networks(GANs) to produce adversarial samples.  Applying to black-box attack and semi-white box attack, AdvGAN achieves high attack success rate and exhibits resilient under existing defenses. Besides, unrestricted adversarial examples trained on AG-GAN\cite{odena_conditional_2017} was introduced by Song et al.\cite{song_constructing_2018}. Specifically, the adversarial examples are generated from scratch using conditional generative models rather than perturbing existing points, providing an instructive and innovative view to construct adversarial examples. Simultaneously, GAN-based approaches has been attracting growing interests recently and a promising future is approaching.
+
+Inspired by C\&W approach, Xiang et al.\cite{xiang_generating_2019} make an attempt to craft adversarial samples of 3D point clouds and propose a novel algorithm against PointNet\cite{qi_pointnet_2017} and create adversarial examples in two perspectives. One is adversarial point perturbation, by negligibly shifting existing points, another is adversarial point generation, by placing sets of scattered and independent points or some point clusters similar to the original object.After extensive experiment with ModelNet40 dataset, very high success rates (over 99\%) are demonstrated for six designed attacks under different perturbation metrics, providing a guideline for further 3D adversarial samples design. Optimization attack algorithms are vigorously promoting creative techniques in crafting 3D adversarial samples, such as in \cite{wicker_robustness_2019,athalye_synthesizing_2018}
+
+Yang et al.\cite{yang_adversarial_2019} propose a skeleton-detach attack method on point clouds, which enhance the speed than previous gradient-based and optimization-based attacks. The method is conducted by detaching the most critical points from the critical subset referred in PointNet iteratively. Tansferability of attacks between different networks, an unsettled problem in the method of Xiang et al.\cite{xiang_generating_2019}, is successfully solved in this approach, but the success rate is declined compared with previous works.
+
+To overcome the hindrance of speed exposed in gradient-based and optimization-based method, and flexibility limitation in skeleton detach methods\cite{yang_adversarial_2019}, Zhou et al.\cite{zhou_lg-gan_nodate} introduce a faster and flexible method label guided adversarial network(LG-GAN) to attack 3D point clouds. The general process is as follows, LG-GAN leverages an adversarial network to extract the features of input point clouds, then use the label encoder to merge specified label information into features, the last step is to feed the encoded features into the decoder to produce adversarial samples. By attacking point cloud network such as PointNet, PointNet++ and DGCNN along with other existing attack methods, Zhou et al. prove that LG-GAN outperforms FGSM and IFGSM in both speed and success rate, and reaches a similar performance as C\&W method with substantially higher speed.
+
+Aiming at generating adversarial attacks on 3D point clouds with transferability of networks, Hamdi et al develop dubbed AdvPC\cite{vedaldi_advpc_2020}, in which the attack is generated with an accessible victim network and the adversarial sample can be applied to an inaccessible and unseen transfer network. An auto-encoder(AE), which can reconstruct the perturbed input, is introduced in the method to generate more transferable attacks. Through multiple tests on point clouds network such as PointNet, PointNet++, DGSNN, high attack success rate and better transferability than other existing 3D attacks are provided. Additionally, Hamdi et al also demonstrate that compared to other baselines on the ModelNet40, AdvPC can increase the ability to break defenses by approximately 40\%.
+
+Denoiser and Upsampler Network(DUP-Net\cite{zhou_dup-net_2019}), proposed by Zhou et al, is a defense approach for adversarial attacks on 3D point cloud classification. This network is merge of SOR(statistical outlier removal\cite{rusu_towards_2008}) layer and PU-Net\cite{li_pu-gan_nodate}, presenting that additional robustness is offered by removing statistical outliers and the upsampler network can defend well against adversarial attacks such as \acrshort{cw} attacks.
